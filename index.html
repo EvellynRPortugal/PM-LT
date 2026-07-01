@@ -528,11 +528,12 @@ async function loadFromLauto() {
   try {
     // so veiculos PAGUE MENOS, coleta/entrega, que NAO estao OK (em manutencao)
     const q = LAUTO_URL + '/rest/v1/veiculos?select=placa,perfil,base,tipo_rota,status,projeto'
-      + '&projeto=eq.PAGUE%20MENOS'
-      + '&tipo_rota=eq.COLETA/ENTREGA'
+      + '&projeto=eq.' + encodeURIComponent('PAGUE MENOS')
+      + '&tipo_rota=eq.' + encodeURIComponent('COLETA/ENTREGA')
       + '&status=neq.OK'
       + '&t=' + Date.now();
     const r = await fetch(q, { cache: 'no-store', headers: { 'apikey': LAUTO_KEY, 'Authorization': 'Bearer ' + LAUTO_KEY, 'Cache-Control': 'no-cache' } });
+    if (!r.ok) { console.warn('[Lauto] resposta', r.status, await r.text()); return; }
     const rows = await r.json();
     if (!Array.isArray(rows)) return;
     rows.forEach(row => {
