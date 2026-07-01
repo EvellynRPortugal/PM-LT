@@ -485,7 +485,7 @@ const routesByCd = [
 async function dbLoad() {
   try {
     cds.forEach(c => c.maint = []); // zera antes de recarregar (evita acumular no refresh)
-    const r = await fetch(SUPA_URL + '/rest/v1/manutencao?select=*&t=' + Date.now(), {
+    const r = await fetch(SUPA_URL + '/rest/v1/manutencao?select=*', {
       cache: 'no-store',
       headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Cache-Control': 'no-cache' }
     });
@@ -530,8 +530,7 @@ async function loadFromLauto() {
     const q = LAUTO_URL + '/rest/v1/veiculos?select=placa,perfil,base,tipo_rota,status,projeto'
       + '&projeto=eq.' + encodeURIComponent('PAGUE MENOS')
       + '&tipo_rota=eq.' + encodeURIComponent('COLETA/ENTREGA')
-      + '&status=neq.OK'
-      + '&t=' + Date.now();
+      + '&status=neq.OK';
     const r = await fetch(q, { cache: 'no-store', headers: { 'apikey': LAUTO_KEY, 'Authorization': 'Bearer ' + LAUTO_KEY, 'Cache-Control': 'no-cache' } });
     if (!r.ok) { console.warn('[Lauto] resposta', r.status, await r.text()); return; }
     const rows = await r.json();
