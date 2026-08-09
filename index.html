@@ -493,6 +493,7 @@ const routesByCd = [
 
 async function dbLoad() {
   try {
+    cds.forEach(c => c.maint = []); // zera antes de recarregar (evita acumular no refresh)
     const r = await fetch(SUPA_URL + '/rest/v1/manutencao?select=*', {
       headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
     });
@@ -505,8 +506,9 @@ async function dbLoad() {
   } catch(e) { console.warn('Erro ao carregar:', e); }
 }
 
-// ===== LEITURA DA CONFERENCIA (painel principal L'auto) =====
-// So para a bolinha: le quais veiculos PM em manutencao foram conferidos hoje.
+// ===== INTEGRACAO COM O PAINEL DE GESTAO DA FROTA (L'AUTO) =====
+// Puxa automaticamente os veiculos PM coleta/entrega em manutencao no painel principal,
+// e ja le a conferencia (para a bolinha).
 const LAUTO_URL = 'https://tvpqdpqmainlhenxpsap.supabase.co';
 const LAUTO_KEY = 'sb_publishable_7V2LryjNG-2VZnqy4QyVFg_cJeHqm38';
 const BASE_TO_CD = {
@@ -514,15 +516,15 @@ const BASE_TO_CD = {
   'SSA':'SSA', 'FEC':'SSA',
   'BEL':'BEL', 'SLZ':'SLZ', 'AQZ':'AQZ', 'JPA':'JPA'
 };
-async function loadConferencia() {
+async function loadFromLauto() {
   try {
     cds.forEach(cd => { cd._temManut = false; cd._todosConf = true; });
-    const q = LAUTO_URL + '/rest/v1/veiculos?select=placa,base,tipo_rota,status,projeto,conferido_em'
+    const q = LAUTO_URL + '/rest/v1/veiculos?select=placa,perfil,base,tipo_rota,status,projeto,conferido_em'
       + '&projeto=eq.' + encodeURIComponent('PAGUE MENOS')
       + '&tipo_rota=eq.' + encodeURIComponent('COLETA/ENTREGA')
       + '&status=neq.OK';
     const r = await fetch(q, { cache: 'no-store', headers: { 'apikey': LAUTO_KEY, 'Authorization': 'Bearer ' + LAUTO_KEY, 'Cache-Control': 'no-cache' } });
-    if (!r.ok) { console.warn('[conf] resposta', r.status); return; }
+    if (!r.ok) { console.warn('[Lauto] resposta', r.status); return; }
     const rows = await r.json();
     if (!Array.isArray(rows)) return;
     const hoje = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
@@ -531,10 +533,16 @@ async function loadConferencia() {
       if (!cdCode) return;
       const cd = cds.find(c => c.code === cdCode);
       if (!cd) return;
+      // puxa o veiculo pro card (evita duplicar)
+      const label = row.placa + (row.perfil && row.perfil !== '-' ? ' (' + row.perfil + ')' : '');
+      if (!cd.maint.some(v => v.split(' ')[0] === row.placa)) {
+        cd.maint.push(label);
+      }
+      // conferencia (bolinha)
       cd._temManut = true;
       if (row.conferido_em !== hoje) cd._todosConf = false;
     });
-  } catch(e) { console.warn('Erro ao ler conferencia:', e); }
+  } catch(e) { console.warn('Erro ao ler painel L auto:', e); }
 }
 // status da bolinha: 'ok' (verde) ou 'pendente' (vermelho)
 function confStatus(cd) {
@@ -702,13 +710,13 @@ function showPage(page) {
 
 async function init() {
   await dbLoad();
-  await loadConferencia();
+  await loadFromLauto();
   renderSummary();
   renderCards();
   renderRoutes();
   setInterval(async () => {
     await dbLoad();
-    await loadConferencia();
+    await loadFromLauto();
     renderSummary();
     renderCards();
   }, 15000);
