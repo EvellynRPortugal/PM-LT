@@ -100,7 +100,16 @@
     font-size: 14px;
     font-weight: 600;
     color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 7px;
   }
+  .conf-dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    display: inline-block; flex-shrink: 0;
+  }
+  .conf-ok { background: #3EC99E; box-shadow: 0 0 7px rgba(62,201,158,.7); }
+  .conf-pendente { background: #F97B7B; box-shadow: 0 0 7px rgba(249,123,123,.7); }
 
   .cd-code {
     font-size: 10px;
@@ -345,11 +354,11 @@ const SUPA_URL = 'https://ysihflrxbraasmpkqhmn.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlzaWhmbHJ4YnJhYXNtcGtxaG1uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyMzQ4NTksImV4cCI6MjA5NjgxMDg1OX0.w0YKw4vGVsMTumFQIZdFx0n9RiGTiCR3Yo1ckVBoejE';
 
 const cds = [
-  { code: 'FOR CD', name: 'CD 01 – FOR CD', necessarios: 18, frota: 18, backup: 4,
+  { code: 'FOR CD', name: 'CD 01 – FOR CD', necessarios: 16, frota: 16, backup: 4,
     maint: [] },
   { code: 'GYN',    name: 'CD 02 – GYN',    necessarios: 19, frota: 19, backup: 7,
     maint: [] },
-  { code: 'REC',    name: 'CD 03 – REC',    necessarios: 23, frota: 23, backup: 4,
+  { code: 'REC',    name: 'CD 03 – REC',    necessarios: 22, frota: 22, backup: 5,
     maint: [] },
   { code: 'SSA',    name: 'CD 04 – SSA',    necessarios: 26, frota: 26, backup: 5,
     maint: [] },
@@ -357,7 +366,7 @@ const cds = [
     maint: [] },
   { code: 'SLZ',    name: 'CD 07 – SLZ',    necessarios: 16, frota: 16, backup: 5,
     maint: [] },
-  { code: 'AQZ',    name: 'CD 09 – AQZ',    necessarios: 13, frota: 13, backup: 4,
+  { code: 'AQZ',    name: 'CD 09 – AQZ',    necessarios: 15, frota: 15, backup: 3,
     maint: [] },
   { code: 'JPA',    name: 'CD 10 – JPA',    necessarios: 7,  frota: 7,  backup: 4,
     maint: [] },
@@ -379,8 +388,6 @@ const routesByCd = [
     { nome: 'PM_FOR16_E', detalhe: '6x — 1 carro' },
     { nome: 'PM_FOR17_E', detalhe: '6x — 1 carro' },
     { nome: 'PM_FOR18_I', detalhe: '4x — 3 carros' },
-    { nome: 'PM_FOR26_I', detalhe: '6x — 1 carros' },
-    { nome: 'PM_FOR27_I', detalhe: '6x — 1 carros' },
   ]},
   { name: 'CD 02 – GYN', rotas: [
     { nome: 'PM_GYN01_E', detalhe: '6x — 1 carro' },
@@ -406,7 +413,7 @@ const routesByCd = [
     { nome: 'PM_REC12_I', detalhe: '6x — 2 carros' },
     { nome: 'PM_REC13_I', detalhe: '6x — 2 carros' },
     { nome: 'PM_REC14_I', detalhe: '6x — 2 carros' },
-    { nome: 'PM_REC15_I', detalhe: '6x — 4 carros' },
+    { nome: 'PM_REC15_I', detalhe: '6x — 3 carros' },
   ]},
   { name: 'CD 04 – SSA', rotas: [
     { nome: 'PM_FEC01_I', detalhe: '3x — 2 carros' },
@@ -462,10 +469,13 @@ const routesByCd = [
     { nome: 'PM_SLZ12_E', detalhe: '6x — 1 carro' },
   ]},
   { name: 'CD 09 – AQZ', rotas: [
-    { nome: 'EF_AQZ15_E', detalhe: '6x — 1 carro' },
-    { nome: 'EF_AQZ16_E', detalhe: '6x — 1 carro' },
-    { nome: 'EF_AQZ17_E', detalhe: '6x — 1 carro' },
-    { nome: 'EF_AQZ18_E', detalhe: '6x — 1 carro' },
+    { nome: 'EF_AQZ01_E', detalhe: '6x — 1 carro' },
+    { nome: 'EF_AQZ02_E', detalhe: '6x — 1 carro' },
+    { nome: 'EF_AQZ03_E', detalhe: '6x — 1 carro' },
+    { nome: 'EF_AQZ04_E', detalhe: '6x — 2 carros' },
+    { nome: 'EF_AQZ05_E', detalhe: '6x — 2 carros' },
+    { nome: 'EF_AQZ06_E', detalhe: '6x — 2 carros' },
+    { nome: 'EF_AQZ07_E', detalhe: '6x — 1 carro' },
     { nome: 'EF_AQZ08_I', detalhe: '6x — 2 carros' },
     { nome: 'EF_AQZ09_I', detalhe: '6x — 1 carro' },
     { nome: 'EF_AQZ10_I', detalhe: '6x — 1 carro' },
@@ -483,10 +493,8 @@ const routesByCd = [
 
 async function dbLoad() {
   try {
-    cds.forEach(c => c.maint = []); // zera antes de recarregar (evita acumular no refresh)
     const r = await fetch(SUPA_URL + '/rest/v1/manutencao?select=*', {
-      cache: 'no-store',
-      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY, 'Cache-Control': 'no-cache' }
+      headers: { 'apikey': SUPA_KEY, 'Authorization': 'Bearer ' + SUPA_KEY }
     });
     const rows = await r.json();
     if (!Array.isArray(rows)) return;
@@ -495,6 +503,43 @@ async function dbLoad() {
       if (cd) cd.maint = row.veiculos || [];
     });
   } catch(e) { console.warn('Erro ao carregar:', e); }
+}
+
+// ===== LEITURA DA CONFERENCIA (painel principal L'auto) =====
+// So para a bolinha: le quais veiculos PM em manutencao foram conferidos hoje.
+const LAUTO_URL = 'https://tvpqdpqmainlhenxpsap.supabase.co';
+const LAUTO_KEY = 'sb_publishable_7V2LryjNG-2VZnqy4QyVFg_cJeHqm38';
+const BASE_TO_CD = {
+  'FOR':'FOR CD', 'GYN':'GYN', 'REC':'REC',
+  'SSA':'SSA', 'FEC':'SSA',
+  'BEL':'BEL', 'SLZ':'SLZ', 'AQZ':'AQZ', 'JPA':'JPA'
+};
+async function loadConferencia() {
+  try {
+    cds.forEach(cd => { cd._temManut = false; cd._todosConf = true; });
+    const q = LAUTO_URL + '/rest/v1/veiculos?select=placa,base,tipo_rota,status,projeto,conferido_em'
+      + '&projeto=eq.' + encodeURIComponent('PAGUE MENOS')
+      + '&tipo_rota=eq.' + encodeURIComponent('COLETA/ENTREGA')
+      + '&status=neq.OK';
+    const r = await fetch(q, { cache: 'no-store', headers: { 'apikey': LAUTO_KEY, 'Authorization': 'Bearer ' + LAUTO_KEY, 'Cache-Control': 'no-cache' } });
+    if (!r.ok) { console.warn('[conf] resposta', r.status); return; }
+    const rows = await r.json();
+    if (!Array.isArray(rows)) return;
+    const hoje = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD local
+    rows.forEach(row => {
+      const cdCode = BASE_TO_CD[row.base];
+      if (!cdCode) return;
+      const cd = cds.find(c => c.code === cdCode);
+      if (!cd) return;
+      cd._temManut = true;
+      if (row.conferido_em !== hoje) cd._todosConf = false;
+    });
+  } catch(e) { console.warn('Erro ao ler conferencia:', e); }
+}
+// status da bolinha: 'ok' (verde) ou 'pendente' (vermelho)
+function confStatus(cd) {
+  if (!cd._temManut) return 'ok'; // sem manutencao = nada a confirmar = verde
+  return cd._todosConf ? 'ok' : 'pendente';
 }
 
 async function dbSave(code, veiculos) {
@@ -510,42 +555,6 @@ async function dbSave(code, veiculos) {
       body: JSON.stringify({ veiculos: veiculos, updated_at: new Date().toISOString() })
     });
   } catch(e) { console.warn('Erro ao salvar:', e); }
-}
-
-// ===== INTEGRACAO COM O PAINEL DE GESTAO DA FROTA (L'AUTO) =====
-// Le os veiculos Pague Menos coleta/entrega que estao em manutencao no painel principal.
-const LAUTO_URL = 'https://tvpqdpqmainlhenxpsap.supabase.co';
-const LAUTO_KEY = 'sb_publishable_7V2LryjNG-2VZnqy4QyVFg_cJeHqm38';
-// Mapeia a base (centro de custo) do banco L'auto para o CD deste painel.
-// FEC entra junto no CD 04 (SSA), conforme combinado.
-const BASE_TO_CD = {
-  'FOR':'FOR CD', 'GYN':'GYN', 'REC':'REC',
-  'SSA':'SSA', 'FEC':'SSA',
-  'BEL':'BEL', 'SLZ':'SLZ', 'AQZ':'AQZ', 'JPA':'JPA'
-};
-async function loadFromLauto() {
-  try {
-    // so veiculos PAGUE MENOS, coleta/entrega, que NAO estao OK (em manutencao)
-    const q = LAUTO_URL + '/rest/v1/veiculos?select=placa,perfil,base,tipo_rota,status,projeto'
-      + '&projeto=eq.' + encodeURIComponent('PAGUE MENOS')
-      + '&tipo_rota=eq.' + encodeURIComponent('COLETA/ENTREGA')
-      + '&status=neq.OK';
-    const r = await fetch(q, { cache: 'no-store', headers: { 'apikey': LAUTO_KEY, 'Authorization': 'Bearer ' + LAUTO_KEY, 'Cache-Control': 'no-cache' } });
-    if (!r.ok) { console.warn('[Lauto] resposta', r.status, await r.text()); return; }
-    const rows = await r.json();
-    if (!Array.isArray(rows)) return;
-    rows.forEach(row => {
-      const cdCode = BASE_TO_CD[row.base];
-      if (!cdCode) return; // base sem card neste painel: ignora
-      const cd = cds.find(c => c.code === cdCode);
-      if (!cd) return;
-      const label = row.placa + (row.perfil && row.perfil !== '-' ? ' (' + row.perfil + ')' : '');
-      // evita duplicar se a mesma placa ja estiver na lista
-      if (!cd.maint.some(v => v.split(' ')[0] === row.placa)) {
-        cd.maint.push(label);
-      }
-    });
-  } catch(e) { console.warn('Erro ao ler painel L auto:', e); }
 }
 
 function barColor(pct) {
@@ -601,7 +610,7 @@ function renderCards() {
     card.id = 'card-' + i;
     card.innerHTML = `
       <div class="card-head">
-        <span class="cd-name">${cd.name}</span>
+        <span class="cd-name"><span class="conf-dot conf-${confStatus(cd)}" title="${confStatus(cd)==='ok'?'Status confirmado hoje':'Falta confirmar veiculos hoje'}"></span>${cd.name}</span>
         <span class="cd-code">${cd.code}</span>
       </div>
       <div class="stats">
@@ -693,16 +702,16 @@ function showPage(page) {
 
 async function init() {
   await dbLoad();
-  await loadFromLauto();
+  await loadConferencia();
   renderSummary();
   renderCards();
   renderRoutes();
   setInterval(async () => {
     await dbLoad();
-    await loadFromLauto();
+    await loadConferencia();
     renderSummary();
     renderCards();
-  }, 5000);
+  }, 15000);
 }
 
 init();
